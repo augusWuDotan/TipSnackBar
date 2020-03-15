@@ -55,8 +55,6 @@ class SnackbarManager {
 
      interface Callback {
         fun show()
-
-
         fun dismiss(event: Int)
     }
 
