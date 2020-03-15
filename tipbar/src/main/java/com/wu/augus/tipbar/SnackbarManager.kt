@@ -14,7 +14,6 @@ import java.lang.ref.WeakReference
  */
 class SnackbarManager {
 
-
     companion object {
 
         private val MSG_TIMEOUT = 0
