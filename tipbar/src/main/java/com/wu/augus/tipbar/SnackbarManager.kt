@@ -58,6 +58,7 @@ class SnackbarManager {
         fun dismiss(event: Int)
 
          //test
+
     }
 
     @Synchronized
