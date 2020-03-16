@@ -1,4 +1,4 @@
-package com.androidadvance.tsnackbar.kotlin
+package com.wu.augus.tipbar
 
 import android.annotation.TargetApi
 import android.content.Context
@@ -27,10 +27,9 @@ import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewPropertyAnimatorListenerAdapter
-
 import com.androidadvance.tsnackbar.kotlin.AnimationUtils.Companion.FAST_OUT_SLOW_IN_INTERPOLATOR
+import com.androidadvance.tsnackbar.kotlin.SnackbarManager
 import com.google.android.material.behavior.SwipeDismissBehavior
-import com.wu.augus.tipbar.R
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 
