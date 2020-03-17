@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         CoordinatorLayout cool = findViewById(R.id.cool);
+
         TSnackbar.Snackbar.INSTANCE.make(cool,"test",TSnackbar.LENGTH_LONG).show();
     }
 }

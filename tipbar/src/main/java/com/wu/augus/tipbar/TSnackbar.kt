@@ -23,6 +23,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toolbar
 import androidx.annotation.IntDef
+import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
@@ -42,6 +43,9 @@ class TSnackbar {
 
     abstract class Callback {
 
+        /**
+         * 狀態
+         */
         companion object {
 
             const val DISMISS_EVENT_SWIPE = 0
@@ -61,15 +65,12 @@ class TSnackbar {
         @IntDef(DISMISS_EVENT_SWIPE, DISMISS_EVENT_ACTION, DISMISS_EVENT_TIMEOUT, DISMISS_EVENT_MANUAL, DISMISS_EVENT_CONSECUTIVE)
         @Retention(RetentionPolicy.SOURCE)
         annotation class DismissEvent
-
         fun onDismissed(snackbar: TSnackbar, @DismissEvent event: Int) {
 
         }
-
         fun onShown(snackbar: TSnackbar) {
 
         }
-
     }
 
     /**
@@ -87,12 +88,11 @@ class TSnackbar {
         const val LENGTH_LONG = 0
     }
 
-    private val ANIMATION_DURATION = 200
-    private val ANIMATION_FADE_DURATION = 180
-
+    /**
+     *  hanlder 顯示與消失
+     */
     private val MSG_SHOW = 0
     private val MSG_DISMISS = 1
-
     private val sHandler: Handler = Handler(Looper.getMainLooper(), Handler.Callback { message ->
         when (message.what) {
             MSG_SHOW -> {
@@ -112,8 +112,12 @@ class TSnackbar {
     private var mParent: ViewGroup? = null
     private var mContext: Context? = null
     private var mView: SnackbarLayout? = null
-    private var mDuration: Int = 0
     private var mCallback: Callback? = null
+    private var mDuration: Int = 0
+    @LayoutRes private var mShowLayout:Int = R.layout.view_tip
+    private var mDelayTime: Long = 2000
+    private var mShowAndHideTime: Long = 200
+
 
     constructor(parent: ViewGroup) {
         this.mParent = parent
@@ -125,26 +129,32 @@ class TSnackbar {
 
     object Snackbar {
 
-        fun make(view: View, text: CharSequence, @Duration duration: Int): TSnackbar {
+        /**
+         * @param view
+         * @param duration
+         * @param mShowLayout 顯示的畫面 default R.layout.view_tip
+         * @param mDelayTime 停留時間
+         * @param mShowAndHideTime 出現與消失時間
+         */
+        fun make (view : View, @Duration duration: Int, @LayoutRes mShowLayout:Int , mDelayTime : Long, mShowAndHideTime:Long): TSnackbar {
             val snackbar = TSnackbar(findSuitableParent(view)!!)
-//            snackbar.setText(text)
+            //預設時間
             snackbar.mDuration = duration
-            Log.d("Snackbar", "make1" + "snackbar is null" + (snackbar == null))
+            //顯示的畫面
+            snackbar.mShowLayout = mShowLayout
+            //停留時間
+            snackbar.mDelayTime = mDelayTime
+            //出現、顯示時間
+            snackbar.mShowAndHideTime = mShowAndHideTime
+            //
             return snackbar
         }
 
-        fun make(view: View, @StringRes resId: Int, @Duration duration: Int): TSnackbar {
-            Log.d("Snackbar", "make2")
-            return make(view, view.resources
-                    .getText(resId), duration)
+        fun make(view: View, @Duration duration: Int): TSnackbar {
+            //停留時間
+            var mDelayTime : Long = if (duration == LENGTH_LONG) SnackbarManager.LONG_DURATION_MS.toLong() else SnackbarManager.SHORT_DURATION_MS.toLong()
+            return make(view, duration,R.layout.view_tip,mDelayTime,200.toLong())
         }
-
-//        fun make(view: View, text: CharSequence, @Duration duration: Int): TSnackbar {
-//            Log.d("Snackbar", "make2")
-//            return make(view, view.resources
-//                    .getText(resId), duration)
-//        }
-
 
         private fun findSuitableParent(view: View?): ViewGroup? {
             Log.d("Snackbar", "findSuitableParent")
@@ -210,49 +220,6 @@ class TSnackbar {
         }
     }
 
-//    @Deprecated("")
-//    fun addIcon(resource_id: Int, size: Int): TSnackbar {
-//        val tv = mView!!.getMessageView()
-//
-//        tv.setCompoundDrawablesWithIntrinsicBounds(BitmapDrawable(Bitmap.createScaledBitmap((mContext?.getResources()!!
-//                .getDrawable(resource_id) as BitmapDrawable).bitmap, size, size, true)), null, null, null)
-//
-//        return this
-//    }
-//
-//    fun setIconPadding(padding: Int): TSnackbar {
-//        val tv = mView!!.getMessageView()
-//        tv.setCompoundDrawablePadding(padding)
-//        return this
-//    }
-//
-//
-//    fun setIconLeft(@DrawableRes drawableRes: Int, sizeDp: Float): TSnackbar {
-//        val tv = mView!!.getMessageView()
-//        var drawable = ContextCompat.getDrawable(mContext!!, drawableRes)
-//        if (drawable != null) {
-//            drawable = fitDrawable(drawable, convertDpToPixel(sizeDp, mContext!!).toInt())
-//        } else {
-//            throw IllegalArgumentException("resource_id is not a valid drawable!")
-//        }
-//        val compoundDrawables = tv.getCompoundDrawables()
-//        tv.setCompoundDrawables(drawable, compoundDrawables[1], compoundDrawables[2], compoundDrawables[3])
-//        return this
-//    }
-//
-//    fun setIconRight(@DrawableRes drawableRes: Int, sizeDp: Float): TSnackbar {
-//        val tv = mView!!.getMessageView()
-//
-//        var drawable = ContextCompat.getDrawable(mContext!!, drawableRes)
-//        if (drawable != null) {
-//            drawable = fitDrawable(drawable, convertDpToPixel(sizeDp, mContext!!).toInt())
-//        } else {
-//            throw IllegalArgumentException("resource_id is not a valid drawable!")
-//        }
-//        val compoundDrawables = tv.getCompoundDrawables()
-//        tv.setCompoundDrawables(compoundDrawables[0], compoundDrawables[1], drawable, compoundDrawables[3])
-//        return this
-//    }
 
     /**
      * Overrides the max width of this snackbar's layout. This is typically not necessary; the snackbar
@@ -313,56 +280,6 @@ class TSnackbar {
             throw IllegalArgumentException("unsupported drawable type")
         }
     }
-
-//    fun setAction(@StringRes resId: Int, listener: View.OnClickListener): TSnackbar {
-////        return setAction(mContext!!.getText(resId), listener)
-////    }
-////
-////    fun setAction(text: CharSequence, listener: View.OnClickListener): TSnackbar {
-////        return setAction(text, true, listener)
-////    }
-
-//    fun setAction(text: CharSequence, shouldDismissOnClick: Boolean, listener: View.OnClickListener?): TSnackbar {
-//        val tv = mView!!.getActionView()
-//
-//        if (TextUtils.isEmpty(text) || listener == null) {
-//            tv.setVisibility(View.GONE)
-//            tv.setOnClickListener(null)
-//        } else {
-//            tv.setVisibility(View.VISIBLE)
-//            tv.setText(text)
-//            tv.setOnClickListener(View.OnClickListener { view ->
-//                listener.onClick(view)
-//                if (shouldDismissOnClick) {
-//                    dispatchDismiss(Callback.DISMISS_EVENT_ACTION)
-//                }
-//            })
-//        }
-//        return this
-//    }
-
-//    fun setActionTextColor(colors: ColorStateList): TSnackbar {
-//        val tv = mView!!.getActionView()
-//        tv.setTextColor(colors)
-//        return this
-//    }
-//
-//    fun setActionTextColor(@ColorInt color: Int): TSnackbar {
-//        val tv = mView!!.getActionView()
-//        tv.setTextColor(color)
-//        return this
-//    }
-//
-//
-//    fun setText(message: CharSequence): TSnackbar {
-//        val tv = mView!!.getMessageView()
-//        tv.setText(message)
-//        return this
-//    }
-//
-//    fun setText(@StringRes resId: Int): TSnackbar {
-//        return setText(mContext!!.getText(resId))
-//    }
 
     fun setDuration(@Duration duration: Int): TSnackbar {
         mDuration = duration
@@ -474,11 +391,11 @@ class TSnackbar {
             ViewCompat.animate(mView!!)
                     .translationY(0f)
                     .setInterpolator(FAST_OUT_SLOW_IN_INTERPOLATOR)
-                    .setDuration(ANIMATION_DURATION.toLong())
+                    .setDuration(mShowAndHideTime)
                     .setListener(object : ViewPropertyAnimatorListenerAdapter() {
                         override fun onAnimationStart(view: View?) {
                             Log.d(mContext?.packageName, "animateViewIn 1-onAnimationStart ")
-//                            mView!!.animateChildrenIn(ANIMATION_DURATION - ANIMATION_FADE_DURATION,
+//                            mView!!.animateChildrenIn(mShowAndHideTime - ANIMATION_FADE_DURATION,
 //                                    ANIMATION_FADE_DURATION)
                         }
 
@@ -498,7 +415,7 @@ class TSnackbar {
             val anim = AnimationUtils.loadAnimation(mView!!.getContext(),
                     R.anim.top_in)
             anim.interpolator = FAST_OUT_SLOW_IN_INTERPOLATOR
-            anim.duration = ANIMATION_DURATION.toLong()
+            anim.duration = mShowAndHideTime
             anim.setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationEnd(animation: Animation) {
                     if (mCallback != null) {
@@ -522,7 +439,7 @@ class TSnackbar {
             ViewCompat.animate(mView!!)
                     .translationY((-mView!!.getHeight()).toFloat())
                     .setInterpolator(FAST_OUT_SLOW_IN_INTERPOLATOR)
-                    .setDuration(ANIMATION_DURATION.toLong())
+                    .setDuration(mShowAndHideTime)
                     .setListener(object : ViewPropertyAnimatorListenerAdapter() {
                         override fun onAnimationStart(view: View?) {
 //                            mView!!.animateChildrenOut(0, ANIMATION_FADE_DURATION)
@@ -537,7 +454,7 @@ class TSnackbar {
             Log.d(mContext?.packageName, "animateViewOut 2")
             val anim = AnimationUtils.loadAnimation(mView!!.getContext(), R.anim.top_out)
             anim.interpolator = FAST_OUT_SLOW_IN_INTERPOLATOR
-            anim.duration = ANIMATION_DURATION.toLong()
+            anim.duration = mShowAndHideTime
             anim.setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationEnd(animation: Animation) {
                     onViewHidden(event)
@@ -625,8 +542,6 @@ class TSnackbar {
             LayoutInflater.from(context)
                     .inflate(R.layout.view_tip, this)
 
-//            LayoutInflater.from(context)
-//                    .inflate(R.layout.tsnackbar_layout_include, this)
 
             ViewCompat.setAccessibilityLiveRegion(this,
                     ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE)
@@ -638,84 +553,11 @@ class TSnackbar {
 //            actionView = findViewById(R.id.snackbar_action) as Button
         }
 
-//        fun getActionView(): Button {
-//            return actionView!!;
-//        }
-//
-//        fun getMessageView(): TextView {
-//            return messageView!!;
-//        }
-
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             var widthMeasureSpec = widthMeasureSpec
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-
-//            if (mMaxWidth > 0 && measuredWidth > mMaxWidth) {
-//                widthMeasureSpec = MeasureSpec.makeMeasureSpec(mMaxWidth, MeasureSpec.EXACTLY)
-//                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-//            }
-//
-//            val multiLineVPadding = resources.getDimensionPixelSize(
-//                    R.dimen.design_snackbar_padding_vertical_2lines)
-//            val singleLineVPadding = resources.getDimensionPixelSize(
-//                    R.dimen.design_snackbar_padding_vertical)
-//            val isMultiLine = messageView!!.layout
-//                    .lineCount > 1
-//
-//            var remeasure = false
-//            if (isMultiLine && mMaxInlineActionWidth > 0
-//                    && actionView!!.measuredWidth > mMaxInlineActionWidth) {
-//                if (updateViewsWithinLayout(LinearLayout.VERTICAL, multiLineVPadding,
-//                                multiLineVPadding - singleLineVPadding)) {
-//                    remeasure = true
-//                }
-//            } else {
-//                val messagePadding = if (isMultiLine) multiLineVPadding else singleLineVPadding
-//                if (updateViewsWithinLayout(LinearLayout.HORIZONTAL, messagePadding, messagePadding)) {
-//                    remeasure = true
-//                }
-//            }
-//
-//            if (remeasure) {
-//                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-//            }
         }
 
-//        internal fun animateChildrenIn(delay: Int, duration: Int) {
-//            ViewCompat.setAlpha(messageView!!, 0f)
-//            ViewCompat.animate(messageView!!)
-//                    .alpha(1f)
-//                    .setDuration(duration.toLong())
-//                    .setStartDelay(delay.toLong())
-//                    .start()
-//
-//            if (actionView!!.visibility == View.VISIBLE) {
-//                ViewCompat.setAlpha(actionView!!, 0f)
-//                ViewCompat.animate(actionView!!)
-//                        .alpha(1f)
-//                        .setDuration(duration.toLong())
-//                        .setStartDelay(delay.toLong())
-//                        .start()
-//            }
-//        }
-//
-//        internal fun animateChildrenOut(delay: Int, duration: Int) {
-//            ViewCompat.setAlpha(messageView!!, 1f)
-//            ViewCompat.animate(messageView!!)
-//                    .alpha(0f)
-//                    .setDuration(duration.toLong())
-//                    .setStartDelay(delay.toLong())
-//                    .start()
-//
-//            if (actionView!!.visibility == View.VISIBLE) {
-//                ViewCompat.setAlpha(actionView!!, 1f)
-//                ViewCompat.animate(actionView!!)
-//                        .alpha(0f)
-//                        .setDuration(duration.toLong())
-//                        .setStartDelay(delay.toLong())
-//                        .start()
-//            }
-//        }
 
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
             super.onLayout(changed, l, t, r, b)
@@ -745,31 +587,6 @@ class TSnackbar {
         internal fun setOnAttachStateChangeListener(listener: OnAttachStateChangeListener) {
             mOnAttachStateChangeListener = listener
         }
-
-//        private fun updateViewsWithinLayout(orientation: Int,
-//                                            messagePadTop: Int, messagePadBottom: Int): Boolean {
-//            var changed = false
-//            if (orientation != getOrientation()) {
-//                setOrientation(orientation)
-//                changed = true
-//            }
-//            if (messageView!!.paddingTop != messagePadTop || messageView!!.paddingBottom != messagePadBottom) {
-//                updateTopBottomPadding(messageView!!, messagePadTop, messagePadBottom)
-//                changed = true
-//            }
-//            return changed
-//        }
-
-//        private fun updateTopBottomPadding(view: View, topPadding: Int, bottomPadding: Int) {
-//            if (ViewCompat.isPaddingRelative(view)) {
-//                ViewCompat.setPaddingRelative(view,
-//                        ViewCompat.getPaddingStart(view), topPadding,
-//                        ViewCompat.getPaddingEnd(view), bottomPadding)
-//            } else {
-//                view.setPadding(view.paddingLeft, topPadding,
-//                        view.paddingRight, bottomPadding)
-//            }
-//        }
     }
 
 
