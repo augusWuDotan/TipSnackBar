@@ -28,4 +28,4 @@
     t1.setText("2222111122221111");
     mTSnackbar.show();
 
-//implementation 'com.github.augusWuDotan:TipSnackBar:Tag'
+    implementation 'com.github.augusWuDotan:TipSnackBar:1.0.3'
