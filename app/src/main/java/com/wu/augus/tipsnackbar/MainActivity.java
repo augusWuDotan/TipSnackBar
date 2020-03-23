@@ -17,11 +17,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-<<<<<<< HEAD
-        CoordinatorLayout cool = findViewById(R.id.cool);
-
-        TSnackbar.Snackbar.INSTANCE.make(cool,"test",TSnackbar.LENGTH_LONG).show();
-=======
         cool = findViewById(R.id.cool);
 
 //        TSnackbar.Snackbar.INSTANCE.make(cool,"test",TSnackbar.LENGTH_LONG).show();
@@ -53,6 +48,5 @@ public class MainActivity extends AppCompatActivity {
 //        TextView t1 = mShowLayout.findViewById(R.id.t1);
 //        t1.setText("2222111122221111");
 //        mTSnackbar.show();
->>>>>>> Feature/1-自定義View
     }
 }

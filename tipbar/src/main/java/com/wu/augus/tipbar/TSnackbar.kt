@@ -23,10 +23,6 @@ import android.widget.LinearLayout
 import android.widget.Toolbar
 import androidx.annotation.IntDef
 import androidx.annotation.LayoutRes
-<<<<<<< HEAD
-import androidx.annotation.StringRes
-=======
->>>>>>> Feature/1-自定義View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewPropertyAnimatorListenerAdapter
@@ -90,11 +86,8 @@ class TSnackbar {
 
         const val LENGTH_LONG = 0
 
-<<<<<<< HEAD
-=======
     }
 
->>>>>>> Feature/1-自定義View
     /**
      *  hanlder 顯示與消失
      */
@@ -121,14 +114,9 @@ class TSnackbar {
     private var mView: SnackbarLayout? = null
     private var mCallback: Callback? = null
     private var mDuration: Int = 0
-<<<<<<< HEAD
     @LayoutRes private var mShowLayout:Int = R.layout.view_tip
     private var mDelayTime: Long = 2000
     private var mShowAndHideTime: Long = 200
-
-=======
-    private var mShowAndHideTime: Long = 200
->>>>>>> Feature/1-自定義View
 
 
     constructor(parent: ViewGroup, @LayoutRes mShowLayout: Int) {
@@ -150,19 +138,7 @@ class TSnackbar {
          * @param mDelayTime 停留時間
          * @param mShowAndHideTime 出現與消失時間
          */
-<<<<<<< HEAD
-        fun make (view : View, @Duration duration: Int, @LayoutRes mShowLayout:Int , mDelayTime : Long, mShowAndHideTime:Long): TSnackbar {
-            val snackbar = TSnackbar(findSuitableParent(view)!!)
-            //預設時間
-            snackbar.mDuration = duration
-            //顯示的畫面
-            snackbar.mShowLayout = mShowLayout
-            //停留時間
-            snackbar.mDelayTime = mDelayTime
-            //出現、顯示時間
-            snackbar.mShowAndHideTime = mShowAndHideTime
-            //
-=======
+
         fun make(view: View, @Duration duration: Int, @LayoutRes mShowLayout: Int, mShowAndHideTime: Long): TSnackbar {
             //帶入顯示畫面
             val snackbar = TSnackbar(findSuitableParent(view)!!, mShowLayout)
@@ -170,22 +146,16 @@ class TSnackbar {
             snackbar.mDuration = duration
             //出現、顯示時間
             snackbar.mShowAndHideTime = mShowAndHideTime
->>>>>>> Feature/1-自定義View
+
             return snackbar
         }
 
         fun make(view: View, @Duration duration: Int): TSnackbar {
-<<<<<<< HEAD
-            //停留時間
-            var mDelayTime : Long = if (duration == LENGTH_LONG) SnackbarManager.LONG_DURATION_MS.toLong() else SnackbarManager.SHORT_DURATION_MS.toLong()
-            return make(view, duration,R.layout.view_tip,mDelayTime,200.toLong())
-=======
             //預設畫面
             val defaultLayout = R.layout.view_tip
             //上下動畫時間
             val mShowAndHideTime = 200.toLong()
             return make(view, duration, defaultLayout, mShowAndHideTime)
->>>>>>> Feature/1-自定義View
         }
 
         private fun findSuitableParent(view: View?): ViewGroup? {
@@ -246,10 +216,6 @@ class TSnackbar {
         }
     }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> Feature/1-自定義View
     /**
      * (可剔除方法)
      * 建立繪製範圍並寫入圖片
@@ -282,14 +248,10 @@ class TSnackbar {
         }
     }
 
-<<<<<<< HEAD
-    fun setDuration(@Duration duration: Int): TSnackbar {
-=======
     /**
      * 設置時間
      */
     fun setDuration(duration: Int): TSnackbar {
->>>>>>> Feature/1-自定義View
         mDuration = duration
         return this
     }
@@ -553,14 +515,7 @@ class TSnackbar {
             //可以點擊
             isClickable = true
 
-<<<<<<< HEAD
-            LayoutInflater.from(context)
-                    .inflate(R.layout.view_tip, this)
-
-
-=======
             //設置指定視圖的實時區域模式。
->>>>>>> Feature/1-自定義View
             ViewCompat.setAccessibilityLiveRegion(this,
                     ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE)
         }
