@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -24,7 +23,6 @@ import android.widget.LinearLayout
 import android.widget.Toolbar
 import androidx.annotation.IntDef
 import androidx.annotation.LayoutRes
-import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewPropertyAnimatorListenerAdapter
@@ -65,9 +63,11 @@ class TSnackbar {
         @IntDef(DISMISS_EVENT_SWIPE, DISMISS_EVENT_ACTION, DISMISS_EVENT_TIMEOUT, DISMISS_EVENT_MANUAL, DISMISS_EVENT_CONSECUTIVE)
         @Retention(RetentionPolicy.SOURCE)
         annotation class DismissEvent
+
         fun onDismissed(snackbar: TSnackbar, @DismissEvent event: Int) {
 
         }
+
         fun onShown(snackbar: TSnackbar) {
 
         }
@@ -77,15 +77,17 @@ class TSnackbar {
      * @interface
      */
     @IntDef(LENGTH_INDEFINITE, LENGTH_SHORT, LENGTH_LONG)
-    @Retention(RetentionPolicy.SOURCE)
+    @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
     annotation class Duration
 
     companion object {
+
         const val LENGTH_INDEFINITE = -2
 
         const val LENGTH_SHORT = -1
 
         const val LENGTH_LONG = 0
+
     }
 
     /**
@@ -96,13 +98,13 @@ class TSnackbar {
     private val sHandler: Handler = Handler(Looper.getMainLooper(), Handler.Callback { message ->
         when (message.what) {
             MSG_SHOW -> {
-                Log.d(mContext?.packageName, "MSG_SHOW  !")
-                (message?.obj as TSnackbar).showView()
+                Log.d(mContext?.packageName, "MSG_SHOW")
+                (message.obj as TSnackbar).showView()
                 true
             }
             MSG_DISMISS -> {
-                Log.d(mContext?.packageName, "MSG_DISMISS  !")
-                (message?.obj as TSnackbar).hideView(message?.arg1)
+                Log.d(mContext?.packageName, "MSG_DISMISS")
+                (message.obj as TSnackbar).hideView(message.arg1)
                 true
             }
         }
@@ -114,17 +116,17 @@ class TSnackbar {
     private var mView: SnackbarLayout? = null
     private var mCallback: Callback? = null
     private var mDuration: Int = 0
-    @LayoutRes private var mShowLayout:Int = R.layout.view_tip
-    private var mDelayTime: Long = 2000
     private var mShowAndHideTime: Long = 200
 
 
-    constructor(parent: ViewGroup) {
+    constructor(parent: ViewGroup, @LayoutRes mShowLayout: Int) {
         this.mParent = parent
         this.mContext = parent.context
         val inflater = LayoutInflater.from(mContext)
+        //建置顯示畫面
         mView = inflater.inflate(R.layout.tsnackbar_layout, mParent, false) as SnackbarLayout
-        Log.d(mContext?.packageName, "constructor")
+        //設定顯示畫面 merge layout
+        mView?.setLayout(mShowLayout)
     }
 
     object Snackbar {
@@ -136,24 +138,22 @@ class TSnackbar {
          * @param mDelayTime 停留時間
          * @param mShowAndHideTime 出現與消失時間
          */
-        fun make (view : View, @Duration duration: Int, @LayoutRes mShowLayout:Int , mDelayTime : Long, mShowAndHideTime:Long): TSnackbar {
-            val snackbar = TSnackbar(findSuitableParent(view)!!)
-            //預設時間
+        fun make(view: View, @Duration duration: Int, @LayoutRes mShowLayout: Int, mShowAndHideTime: Long): TSnackbar {
+            //帶入顯示畫面
+            val snackbar = TSnackbar(findSuitableParent(view)!!, mShowLayout)
+            //時間
             snackbar.mDuration = duration
-            //顯示的畫面
-            snackbar.mShowLayout = mShowLayout
-            //停留時間
-            snackbar.mDelayTime = mDelayTime
             //出現、顯示時間
             snackbar.mShowAndHideTime = mShowAndHideTime
-            //
             return snackbar
         }
 
         fun make(view: View, @Duration duration: Int): TSnackbar {
-            //停留時間
-            var mDelayTime : Long = if (duration == LENGTH_LONG) SnackbarManager.LONG_DURATION_MS.toLong() else SnackbarManager.SHORT_DURATION_MS.toLong()
-            return make(view, duration,R.layout.view_tip,mDelayTime,200.toLong())
+            //預設畫面
+            val defaultLayout = R.layout.view_tip
+            //上下動畫時間
+            val mShowAndHideTime = 200.toLong()
+            return make(view, duration, defaultLayout, mShowAndHideTime)
         }
 
         private fun findSuitableParent(view: View?): ViewGroup? {
@@ -162,18 +162,14 @@ class TSnackbar {
             var fallback: ViewGroup? = null
             do {
                 if (view is CoordinatorLayout) {
-                    Log.d("Snackbar", "findSuitableParent CoordinatorLayout")
                     return view
                 } else if (view is FrameLayout) {
                     if (view.id == android.R.id.content) {
-                        Log.d("Snackbar", "findSuitableParent FrameLayout content")
                         return view
                     } else {
-                        Log.d("Snackbar", "findSuitableParent FrameLayout")
                         fallback = view
                     }
                 } else if (view is androidx.appcompat.widget.Toolbar || view is Toolbar) {
-                    Log.d("Snackbar", "findSuitableParent Toolbar")
                     /*
                     If we return the toolbar here, the toast will be attached inside the toolbar.
                     So we need to find a some sibling ViewGroup to the toolbar that comes after the toolbar
@@ -206,8 +202,6 @@ class TSnackbar {
                             }
                         }
                     }
-
-                    //                return (ViewGroup) view;
                 }
 
                 if (view != null) {
@@ -220,43 +214,10 @@ class TSnackbar {
         }
     }
 
-
     /**
-     * Overrides the max width of this snackbar's layout. This is typically not necessary; the snackbar
-     * width will be according to Google's Material guidelines. Specifically, the max width will be
-     *
-     *
-     * To allow the snackbar to have a width equal to the parent view, set a value <= 0.
-     *
-     * @param maxWidth the max width in pixels
-     * @return this TSnackbar
+     * (可剔除方法)
+     * 建立繪製範圍並寫入圖片
      */
-    fun setMaxWidth(maxWidth: Int): TSnackbar {
-        mView!!.mMaxWidth = maxWidth
-
-        return this
-    }
-
-    private fun fitDrawable(drawable: Drawable, sizePx: Int): Drawable {
-        var drawable = drawable
-        if (drawable.intrinsicWidth != sizePx || drawable.intrinsicHeight != sizePx) {
-
-            if (drawable is BitmapDrawable) {
-
-                drawable = BitmapDrawable(mContext?.getResources(), Bitmap.createScaledBitmap(getBitmap(drawable), sizePx, sizePx, true))
-            }
-        }
-        drawable.setBounds(0, 0, sizePx, sizePx)
-
-        return drawable
-    }
-
-    private fun convertDpToPixel(dp: Float, context: Context): Float {
-        val resources = context.resources
-        val metrics = resources.displayMetrics
-        return dp * (metrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
-    }
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun getBitmap(vectorDrawable: VectorDrawable): Bitmap {
         val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth,
@@ -267,6 +228,10 @@ class TSnackbar {
         return bitmap
     }
 
+    /**
+     * (可剔除方法)
+     * 建立繪製範圍並寫入圖片
+     */
     private fun getBitmap(drawable: Drawable): Bitmap {
         return if (drawable is BitmapDrawable) {
             drawable.bitmap
@@ -281,16 +246,26 @@ class TSnackbar {
         }
     }
 
-    fun setDuration(@Duration duration: Int): TSnackbar {
+    /**
+     * 設置時間
+     */
+    fun setDuration(duration: Int): TSnackbar {
         mDuration = duration
         return this
     }
 
-    @Duration
+
+    /**
+     * @Duration
+     * 設置時間
+     */
     fun getDuration(): Int {
         return mDuration
     }
 
+    /**
+     * 取得顯示的畫面 View
+     */
     fun getView(): View? {
         return mView
     }
@@ -312,6 +287,7 @@ class TSnackbar {
         mCallback = callback
         return this
     }
+
 
     fun isShown(): Boolean {
         return SnackbarManager.get().isCurrent(mManagerCallback)
@@ -507,9 +483,6 @@ class TSnackbar {
 
     class SnackbarLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : LinearLayout(context, attrs) {
 
-//        private var messageView: TextView? = null
-//        private var actionView: Button? = null
-
         internal var mMaxWidth: Int
         private val mMaxInlineActionWidth: Int
 
@@ -522,7 +495,6 @@ class TSnackbar {
 
         interface OnAttachStateChangeListener {
             fun onViewAttachedToWindow(v: View)
-
             fun onViewDetachedFromWindow(v: View)
         }
 
@@ -535,22 +507,28 @@ class TSnackbar {
                 ViewCompat.setElevation(this, a.getDimensionPixelSize(
                         R.styleable.SnackbarLayout_elevation, 0).toFloat())
             }
+            //
             a.recycle()
 
+            //可以點擊
             isClickable = true
 
-            LayoutInflater.from(context)
-                    .inflate(R.layout.view_tip, this)
-
-
+            //設置指定視圖的實時區域模式。
             ViewCompat.setAccessibilityLiveRegion(this,
                     ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE)
         }
 
+        /**
+         * 設置嵌入的layout
+         */
+        fun setLayout(showLayout: Int) {
+            LayoutInflater.from(context)
+                    .inflate(showLayout, this)
+
+        }
+
         override fun onFinishInflate() {
             super.onFinishInflate()
-//            messageView = findViewById(R.id.snackbar_text) as TextView
-//            actionView = findViewById(R.id.snackbar_action) as Button
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
